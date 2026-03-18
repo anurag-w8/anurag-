@@ -7,6 +7,11 @@ bot.on("message", async (msg) => {
   const chatId = msg.chat.id;
   const userText = msg.text;
 
+  if (userText === "/start") {
+    bot.sendMessage(chatId, "🤖 AI Bot Ready!");
+    return;
+  }
+
   try {
     const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
       method: "POST",
@@ -15,14 +20,20 @@ bot.on("message", async (msg) => {
         "Content-Type": "application/json"
       },
       body: JSON.stringify({
-        model: "openai/gpt-3.5-turbo",
+        model: "mistralai/mistral-7b-instruct",
         messages: [{ role: "user", content: userText }]
       })
     });
 
     const data = await response.json();
-    const reply = data.choices[0].message.content;
+    console.log("API RESPONSE:", data);
 
+    if (!data.choices || !data.choices[0]) {
+      bot.sendMessage(chatId, "❌ API error: " + JSON.stringify(data));
+      return;
+    }
+
+    const reply = data.choices[0].message.content;
     bot.sendMessage(chatId, reply);
 
   } catch (err) {
